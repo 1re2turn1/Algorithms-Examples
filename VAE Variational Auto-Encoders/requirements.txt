@@ -1,0 +1,10 @@
+# Minimal dependencies for vae_mnist_minimal.py
+# Install:
+#   pip install -r requirements.txt
+#
+# Notes:
+# - Install the PyTorch build that matches your CUDA/CPU environment.
+#   If pip fails, follow the official selector: https://pytorch.org/get-started/locally/
+
+torch
+torchvision
