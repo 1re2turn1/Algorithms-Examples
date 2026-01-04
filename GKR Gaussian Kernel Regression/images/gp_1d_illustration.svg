@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 600 380">
+  <defs>
+    <style>
+      .cls-1 {
+        font-size: 19.5px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #333;
+        font-family: ArialMT, Arial;
+      }
+
+      .cls-1, .cls-2, .cls-3 {
+        isolation: isolate;
+      }
+
+      .cls-2 {
+        font-size: 28px;
+      }
+
+      .cls-4 {
+        stroke: #06c;
+        stroke-width: 3px;
+      }
+
+      .cls-4, .cls-5 {
+        fill: none;
+      }
+
+      .cls-5 {
+        stroke: #333;
+        stroke-width: 1.8px;
+      }
+
+      .cls-3 {
+        fill: #b3d9ff;
+        opacity: .5;
+      }
+
+      .cls-6 {
+        fill: #e74c3c;
+        stroke: #c0392b;
+        stroke-width: 1.5px;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.6.0, SVG Export Plug-In . SVG Version: 1.2.0 Build 709)  -->
+  <g>
+    <g id="_图层_1" data-name="图层_1">
+      <line class="cls-5" x1="60" y1="320" x2="560" y2="320"/>
+      <line class="cls-5" x1="60" y1="320" x2="60" y2="40"/>
+      <text class="cls-2" transform="translate(550 342)"><tspan x="0" y="0">s</tspan></text>
+      <text class="cls-2" transform="translate(35 52)"><tspan x="0" y="0">r</tspan></text>
+      <path class="cls-3" d="M80,180c80-40,156.7-53.3,230-40,73.3,13.3,150,33.3,230,60v60c-73.3,13.3-150,6.7-230-20-73.3-13.3-150-6.7-230,20v-80Z"/>
+      <path class="cls-4" d="M80,220c80-40,156.7-50,230-30,73.3,20,150,33.3,230,40"/>
+      <circle class="cls-6" cx="120" cy="210" r="6"/>
+      <circle class="cls-6" cx="180" cy="175" r="6"/>
+      <circle class="cls-6" cx="260" cy="185" r="6"/>
+      <circle class="cls-6" cx="340" cy="205" r="6"/>
+      <circle class="cls-6" cx="420" cy="238" r="6"/>
+      <circle class="cls-6" cx="490" cy="225" r="6"/>
+      <g>
+        <circle class="cls-6" cx="82.2" cy="94.7" r="6.5"/>
+        <text class="cls-1" transform="translate(101.6 101.2)"><tspan x="0" y="0">Observed data</tspan></text>
+        <line class="cls-4" x1="248.3" y1="94.7" x2="288.2" y2="94.7"/>
+        <text class="cls-1" transform="translate(296.4 101.2)"><tspan x="0" y="0">GP mean</tspan></text>
+        <rect class="cls-3" x="387.6" y="84.4" width="38.9" height="20.8"/>
+        <text class="cls-1" transform="translate(439.5 101.2)"><tspan x="0" y="0">Uncertainty (±2σ)</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,16 +1,17 @@
 # <center> Fisher Information in Neuroscience </center>
+
 ---
-# 1. Background & Motivation: Why Compute Fisher Information?
+# 1. Background & Motivation
 
 ## 1.1 How precisely can a neural population encode stimuli or behavioral variables?
-Given stimulus/behavioral variables (stimulus) $\mathbf{s}$ (e.g., position $(x,y)$, direction $\theta$, speed $v$), we record neural population responses $\mathbf{r}\in\mathbb{R}^N$ (e.g., spike counts or firing rates in a time window).
+Given stimulus/behavioral variables $\mathbf{s}$ (e.g., position $(x,y)$, direction $\theta$, speed $v$), we record neural population responses $\mathbf{r}\in\mathbb{R}^N$. 
 
 We care about:
 - Decode stimuli from responses
 - Theoretical precision limit
 - State-dependent precision changes
 
-### 1.2 What can Fisher Information Tell Us ?
+### 1.2 Fisher Information tells us the theoretical limit of estimation error
 **No need to specify a decoder**, yet it provides the error lower bound for any unbiased estimator **(Cramér–Rao bound)**.
 
 - **1D parameter:**
@@ -20,7 +21,6 @@ We care about:
 
 FI/FIM is widely used to:
 - Compare encoding across populations or states
-- Assess impact of noise correlations
 - Link sensitivity to noise structure
 
 ---
@@ -97,12 +97,12 @@ $$
 This yields a $k\times k$ matrix $\mathcal{I}(\mathbf{s})$.
 
 #### Intuition:
-- Diagonal elements represent the amount of information about each individual stimulus parameter.
-- Off-diagonal elements capture how changes in one parameter affect the information about another, reflecting parameter interactions.
+- Diagonal elements: Information about each individual stimulus.
+- Off-diagonal elements: Parameter interactions.
 
 ---
 
-## 2.3 Closed-Form FIM Under Gaussian Assumption
+## 2.3 FIM Under Gaussian Assumption
 To incorporate noise correlations, neuroscience commonly uses Gaussian approximation:
 
 **Assume:**
@@ -252,10 +252,15 @@ $$\mathcal{I}(\mathbf{s}) = J(\mathbf{s})^T Q(\mathbf{s})^{-1} J(\mathbf{s})$$
 ---
 
 ## 4.3 Gaussian Kernel Regression (GKR) Framework
-
+<div align="center">
+  <img src="images/reference.png" alt="paper" width="1280">
+</div>  
+  
+<p></p>
 Genrally, GKR consists of 2 steps to estimate:
 
 1. A smooth **mean manifold** (population tuning) $\mathbf{f}(\mathbf{s}) = \mathbb{E}[\mathbf{r}\mid\mathbf{s}] \in \mathbb{R}^N$
+
 2. A smooth **noise covariance field** $Q(\mathbf{s}) = \mathrm{Cov}(\mathbf{r}-\mathbf{f}(\mathbf{s})\mid\mathbf{s}) \in \mathbb{R}^{N\times N}$
 
 Once both are available, Fisher information can be computed at any query point via:
@@ -263,10 +268,6 @@ $$
 \mathcal{I}(\mathbf{s}) = J(\mathbf{s})^T Q(\mathbf{s})^{-1} J(\mathbf{s}),\qquad
 J(\mathbf{s}) = \frac{\partial \mathbf{f}(\mathbf{s})}{\partial \mathbf{s}}.
 $$
-
-<div align="center">
-  <img src="images/reference.png" alt="paper" width="1280">
-</div>
 
 ---
 
@@ -289,6 +290,24 @@ $$
 f_j(\mathbf{s}) \sim \nobreak\mathcal{GP}(0,\, k(\mathbf{s},\mathbf{s}'))
 $$
 
+#### What is Gaussian Process ?
+
+A **Gaussian Process (GP)** is a flexible way to model unknown smooth functions. Think of it as:
+- **Input:** Some points where you measured data (e.g., neural responses at different stimulus values)
+- **Output:** A smooth curve that fits through those points, plus uncertainty estimates everywhere
+
+#### Core Assumption:
+For each neuron $j$, any finite collection of function values $[f_j(\mathbf{s}_1), f_j(\mathbf{s}_2), \ldots, f_j(\mathbf{s}_n)]$ follows a **joint Gaussian distribution**. The function's properties are fully specified by:
+- **Mean function:** $m_j(\mathbf{s}) = \mathbb{E}[f_j(\mathbf{s})]$ (often set to 0)
+- **Covariance function (kernel):** $k(\mathbf{s}, \mathbf{s}') = \mathbb{E}[(f_j(\mathbf{s}) - m_j(\mathbf{s}))(f_j(\mathbf{s}') - m_j(\mathbf{s}'))]$
+
+#### Key idea:
+ GP learns the shape directly from data by defining how similar nearby points should be ("Kernel").
+
+<div align="center">
+  <img src="images/gp_1d_illustration.svg" alt="GP 1D illustration" width="1280">
+</div>
+
 **Kernel design:** A kernel $k(\mathbf{s},\mathbf{s}')$ defines similarity between stimulus states. Typically,
 $$
 k(\mathbf{s},\mathbf{s}')
@@ -298,14 +317,14 @@ For example:
 
 - For continuous variables (e.g., speed), use a Squared Exponential kernel (e.g., $k_d(s_d,s'_d)=\exp(-\frac{(s_d-s'_d)^2}{2\ell_d^2})$)
 
-**GP predition**
+#### GP predition
 Once the kernel is specified, we can predict the expected responses **$r_j(\mathbf{s}_*)$** for a given $\mathbf{s}_*$ using the following formula:
 $$r_j(\mathbf{s}_*) = \mathbf{k}_*^T (K + \beta^{-1} I)^{-1} \mathbf{r}_j,$$
 where:
 - $\mathbf{k}_*$ defines the kernel vector between the test point $\mathbf{s}_*$ and training points: $[\mathbf{k}_*]_t = k(\mathbf{s}_*, \mathbf{s}_t)$
 - $K$ is the kernel matrix over training points: $[K]_{tt'} = k(\mathbf{s}_t, \mathbf{s}_{t'})$
 
-**Intuition of the above formula**
+#### Intuition of the above formula
 - For a test point $\mathbf{s}_*$, the predicted mean response is a weighted sum of observed responses $\mathbf{r}_j$. The weights depend on the similarity between $\mathbf{s}_*$ and training points, adjusted by noise level $\beta^{-1}$.
 
 **Derivation of the above formula**
@@ -313,7 +332,7 @@ where:
 - Key mathematical theorem: If $\begin{pmatrix} \mathbf{y} \\ \mathbf{y}_* \end{pmatrix} \sim \mathcal{N}\left(0, \begin{pmatrix} K & K_*^T \\ K_* & K_{**} \end{pmatrix}\right)$, then the conditional distribution $\mathbf{y}_*|\mathbf{y}$  ~ $\mathcal{N}(K_* K^{-1} \mathbf{y}, K_{**} - K_* K^{-1} K_*^T)$.
 - Here, $\mathbf{y}$ corresponds to training outputs $\mathbf{r}_j$, and $\mathbf{y}_*$ corresponds to the test output $r_j(\mathbf{s}_*)$.
 
-**Learnable hyperparameters**
+#### Learnable hyperparameters
 Hyperparameters (length scales $\ell_d$, constant $c$, etc.) could be learned by maximizing the negative log marginal likelihood.
 
 **Derivation of the loss function**
@@ -322,25 +341,24 @@ Given stimulus labels $\mathbf{S}$ and hyperparameters $\boldsymbol{\theta}$, th
 
 Our goal is to maximize the marginal likelihood of the observed data $\mathbf{y}$ given $\mathbf{S}$ and $\boldsymbol{\theta}$:
 
-$$p(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta}) = \int p(\mathbf{y} \mid \mathbf{f}) \, p(\mathbf{f} \mid \mathbf{X}, \boldsymbol{\theta}) \, d\mathbf{f}$$
+$$p(\mathbf{y} \mid \mathbf{S}, \boldsymbol{\theta}) = \int p(\mathbf{y} \mid \mathbf{f}) \, p(\mathbf{f} \mid \mathbf{S}, \boldsymbol{\theta}) \, d\mathbf{f}$$
 
 
-Since both $p(\mathbf{f} \mid \mathbf{X}, \boldsymbol{\theta}) = \mathcal{N}(\mathbf{0}, K)$ and $p(\mathbf{y} \mid \mathbf{f}) = \mathcal{N}(\mathbf{f}, \beta^{-1}I)$ are Gaussian, the marginal is also Gaussian:
+Since both $p(\mathbf{f} \mid \mathbf{S}, \boldsymbol{\theta}) = \mathcal{N}(\mathbf{0}, K)$ and $p(\mathbf{y} \mid \mathbf{f}) = \mathcal{N}(\mathbf{f}, \beta^{-1}I)$ are Gaussian, the marginal is also Gaussian:
 
-$$\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta} \sim \mathcal{N}(\mathbf{0}, K_y), \quad \text{where } K_y = K + \beta^{-1}I$$
+$$\mathbf{y} \mid \mathbf{S}, \boldsymbol{\theta} \sim \mathcal{N}(\mathbf{0}, K_y), \quad \text{where } K_y = K + \beta^{-1}I$$
 
 
 So the marginal likelihood is:
 
-$$p(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta}) = \frac{1}{(2\pi)^{T/2} |K_y|^{1/2}} \exp\left(-\frac{1}{2} \mathbf{y}^T K_y^{-1} \mathbf{y}\right)$$
+$$p(\mathbf{y} \mid \mathbf{S}, \boldsymbol{\theta}) = \frac{1}{(2\pi)^{T/2} |K_y|^{1/2}} \exp\left(-\frac{1}{2} \mathbf{y}^T K_y^{-1} \mathbf{y}\right)$$
 
 Taking the logarithm gives:
 
-$$\log p(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta}) = -\frac{T}{2}\log(2\pi) - \frac{1}{2}\log|K_y| - \frac{1}{2}\mathbf{y}^T K_y^{-1} \mathbf{y}$$
-
+$$\log p(\mathbf{y} \mid \mathbf{S}, \boldsymbol{\theta}) = -\frac{T}{2}\log(2\pi) - \frac{1}{2}\log|K_y| - \frac{1}{2}\mathbf{y}^T K_y^{-1} \mathbf{y}$$
 To find optimal hyperparameters, we **minimize** the negative log marginal likelihood:
 
-$$\mathcal{L}(\boldsymbol{\theta}) = -\log p(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\theta}) = \frac{1}{2}\log|K_y| + \frac{1}{2}\mathbf{y}^T K_y^{-1} \mathbf{y} + \frac{T}{2}\log(2\pi)$$
+$$\mathcal{L}(\boldsymbol{\theta}) = -\log p(\mathbf{y} \mid \mathbf{S}, \boldsymbol{\theta}) = \frac{1}{2}\log|K_y| + \frac{1}{2}\mathbf{y}^T K_y^{-1} \mathbf{y} + \frac{T}{2}\log(2\pi)$$
 
 The constant term $\frac{T}{2}\log(2\pi)$ can be dropped during optimization, yielding:
 
@@ -393,11 +411,15 @@ This yields **state-dependent Fisher information Matrices**.
 
 ---
 
-### 4.3.5 Why GKR Works Well for Natural Behavior Data
+### 4.3.5 Advantages of GKR
 - **No repeats needed:** smoothness in $\mathbf{s}$ replaces trial repetition.
 - **Mean and covariance are both smooth:** avoids discontinuities introduced by hard bin boundaries.
 - **High-dimensional stability:** kernel averaging plus regularization produces invertible $\hat{Q}(\mathbf{s})$ even when $N$ is large.
 - **Uncertainty-aware mean fitting:** GP regression naturally provides uncertainty estimates (useful for diagnostics and model selection).
+
+<div align="center">
+  <img src="images/AdvantageOfGKR.png" alt="Advantage of GKR" width="1280">
+</div>
 
 ---
 
@@ -414,10 +436,9 @@ This yields **state-dependent Fisher information Matrices**.
 ## Practical Pipeline
 
 1. Collect data $(\mathbf{s}_t, \mathbf{r}_t)$; z-score preprocess $\mathbf{r}$.
-2. Set up hyperparameters for GKR (kernels, inducing points, etc.).
-3. Run GKR to fit $\hat{\mathbf{f}}(\mathbf{s})$ and $\hat{Q}(\mathbf{s})$.
-4. Compute $\hat{J}(\mathbf{s})$ and $\hat{\mathcal{I}}(\mathbf{s})$ at desired stimulus points.
-5. Analyze $\hat{\mathcal{I}}(\mathbf{s})$ for insights into neural coding precision.
+2. Run GKR to fit $\hat{\mathbf{f}}(\mathbf{s})$ and $\hat{Q}(\mathbf{s})$.
+3. Compute $\hat{J}(\mathbf{s})$ and $\hat{\mathcal{I}}(\mathbf{s})$ at desired stimulus points.
+4. Analyze $\hat{\mathcal{I}}(\mathbf{s})$ for insights into neural coding precision.
 
 <div align="center">
   <img src="images/gkr_pipeline.svg" alt="GKR pipeline" width="820">
