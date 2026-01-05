@@ -1,5 +1,10 @@
-# %%
-# # Gaussian Kernel Regression (GKR) implementation
+"""
+Gaussian Kernel Regression (GKR) Module
+
+This module provides classes and functions for fitting neural population responses 
+using Gaussian Kernel Regression, which estimates both mean manifold and noise covariance.
+"""
+
 import tensorflow as tf
 import numpy as np
 import gpflow
@@ -139,6 +144,7 @@ class GKR_Fitter():
             cov_pred = None
 
         return r_pred, cov_pred
+
 
 class Kernel_Cov(tf.Module):
     """
@@ -415,95 +421,3 @@ def create_kernel(circular_period=None, input_dim=1):
 
     # Raise an error if the input doesn't match the expected format
     raise ValueError("Invalid input for circular_period")
-
-# %%
-# # Import necessary libraries for data generation and visualization
-import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
-
-# Plot covariance ellipses
-def plot_cov_ellipse(mean, cov, ax, n_std=2.0, **kwargs):
-    # Compute eigenvalues and eigenvectors
-    eigenvals, eigenvecs = np.linalg.eigh(cov)
-
-    # Get the angle of rotation (from largest eigenvector)
-    theta = np.arctan2(eigenvecs[1, 0], eigenvecs[0, 0])
-
-    # Width and height of ellipse (based on eigenvalues)
-    width, height = 2 * n_std * np.sqrt(eigenvals)
-
-    # Create the ellipse
-    ellip = Ellipse(xy=mean, width=width, height=height,
-                    angle=np.degrees(theta), **kwargs)
-    ax.add_patch(ellip)
-
-# %%
-def generate_circular_dataset(n_data, radius=1.0, noise_factor=0.1):
-    # Generate angles for circle (between 0 and 2*pi)
-    angles = np.linspace(0, 2 * np.pi, n_data)
-
-    # Generate circle coordinates
-    x = radius * np.cos(angles)
-    y = radius * np.sin(angles)
-
-    # Stack the x, y coordinates to form the response (n_data, 2)
-    response = np.stack((x, y), axis=1)
-
-    # Add noise to the response
-    noise = np.random.normal(scale=noise_factor, size=response.shape)
-    response_noisy = response + noise
-
-    # Generate scalar labels
-    labels = angles.reshape(-1, 1)  # Labels could be scalar, here using angle as label
-
-    return response_noisy, labels
-
-# %%
-# Example usage
-n_data = 100
-response_noisy, labels = generate_circular_dataset(n_data, radius=1.0, noise_factor=0.2) 
-# response_noisy: (n_sample, n_neuron = 2); 
-# labels: (n_sample, n_label = 1)
-
-# Plot the raw noisy circle data
-plt.scatter(response_noisy[:, 0], response_noisy[:, 1], c=labels.ravel(), cmap='viridis')
-plt.title("Noisy Circular Data")
-plt.xlabel("X")
-plt.ylabel("Y")
-plt.gca().set_aspect('equal', adjustable='box')
-
-# %%
-# If you want to apply GKR in your dataset, you need to
-# 1. Prepare a label matrix of shape (n_sample, n_labels) and a neural response matrix of shape (n_sample, n_neuron).
-# 2. Specify the periodicity of each label variable. If a variable is not periodic, set circular_period = None.
-# 3. Use GKR shown as below.
-
-gkr = GKR_Fitter(n_input=labels.shape[1], n_output=response_noisy.shape[1], circular_period=2*np.pi, gpr_params={'n_inducing': 10}, n_epochs=5) # n_inducing representing the number of inducing variable used to approximate the manifold.
-# The smaller the faster. Maximum is the number of sample points, i.e. response_noisy.shape[0]. Circular_period is the period of label, set to None if the label variable is a non-circular variable.
-_ = gkr.fit(response_noisy, labels, fit_cov=True)
-
-# %%
-# Draw the fitted manifold
-label_pred = np.linspace(0, 2 * np.pi, 50).reshape(-1, 1) # Get a mesh points
-response_pred, response_cov = gkr.predict(label_pred) # Get the manifold values of the mesh points (response_pred) along with their corresponding cov (response_cov)
-
-# %%
-# Plot the raw noisy circle data
-plt.scatter(response_noisy[:, 0], response_noisy[:, 1], c=labels.ravel(), cmap='viridis')
-plt.title("Noisy Circular Data")
-plt.xlabel("X")
-plt.ylabel("Y")
-plt.gca().set_aspect('equal', adjustable='box')
-
-# Plot the fitted manifold
-plt.plot(response_pred[:, 0], response_pred[:, 1], 'r-', label='Predicted Manifold')
-
-# Plot ellipses for every nth point to avoid overcrowding
-n_skip = 5  # Adjust this value to show more or fewer ellipses
-for i in range(0, len(response_pred), n_skip):
-    plot_cov_ellipse(response_pred[i], response_cov[i],
-                     plt.gca(), alpha=0.2, color='red')
-
-plt.legend()
-
-#%%
